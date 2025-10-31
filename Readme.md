@@ -1,3 +1,5 @@
+```bash 
+
 🏗️ 1. VPC (Virtual Private Cloud)
 
 A VPC is your isolated network environment in AWS. You define its CIDR range (for example, 10.0.0.0/16).
@@ -178,7 +180,7 @@ VPC: 10.0.0.0/16
 
 &nbsp;    └── App servers / Databases
 
-
+```
 
 
 
