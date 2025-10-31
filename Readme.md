@@ -1,43 +1,43 @@
+# Overview 
+
 ```bash 
 
-🏗️ 1. VPC (Virtual Private Cloud)
+- ***🏗️ 1. VPC (Virtual Private Cloud)***  
 
-A VPC is your isolated network environment in AWS. You define its CIDR range (for example, 10.0.0.0/16).
+  -   A VPC is your isolated network environment in AWS. You define its CIDR range (for example, 10.0.0.0/16).
 
-Example:
+  Example:
 
-CIDR: 10.0.0.0/16
+  CIDR: 10.0.0.0/16
 
-This provides IPs from 10.0.0.0 to 10.0.255.255, which you then divide into subnets.
+  This provides IPs from 10.0.0.0 to 10.0.255.255, which you then divide into subnets.
 
 
-🌐 2. Subnets
+  ***🌐2. Subnets***
 
-Subnets divide your VPC CIDR block into smaller sections — public and private.
+  -Subnets divide your VPC CIDR block into smaller sections — public and private.
 
-Subnet Type	Example CIDR	Purpose	Route Table Entry
+  Subnet Type	Example CIDR	Purpose	Route Table Entry
 
-Public Subnet	10.0.1.0/24	Hosts resources needing internet access (EC2 bastion, ALB, etc.)	Route to Internet Gateway (IGW)
+  Public Subnet	10.0.1.0/24	Hosts resources needing internet access (EC2 bastion, ALB, etc.)	Route to Internet Gateway (IGW)
 
-Private Subnet	10.0.2.0/24	Hosts backend resources (EC2, DBs)	Route to NAT Gateway
+  Private Subnet	10.0.2.0/24	Hosts backend resources (EC2, DBs)	Route to NAT Gateway
 
-\- Public Subnet (10.0.1.0/24)
+   ***3.Public Subnet (10.0.1.0/24)***
 
-A network directly connected to the Internet via an Internet Gateway (IGW).
+   A network directly connected to the Internet via an Internet Gateway (IGW).
 
-Hosts:
+   Hosts:
 
-&nbsp; Bastion Host → Used for SSH access to private servers.
+   Bastion Host → Used for SSH access to private servers.
 
-&nbsp;
+   NAT Gateway → Allows private resources to reach the internet outbound only (for patching, updates, etc.).
 
-&nbsp; NAT Gateway → Allows private resources to reach the internet outbound only (for patching, updates, etc.).
+   Traffic Flow:
 
-Traffic Flow:
+    Internet ↔ IGW ↔ Bastion Host (inbound SSH, web traffic, etc.)
 
-&nbsp;  Internet ↔ IGW ↔ Bastion Host (inbound SSH, web traffic, etc.)
-
-&nbsp;  Private subnet → NAT GW → IGW → Internet (for outbound only)
+    Private subnet → NAT GW → IGW → Internet (for outbound only)
 
 Public Subnet Route Table Example:
 
@@ -50,19 +50,19 @@ Destination    Target
 
 - Private Subnet (10.0.2.0/24):
 
-&nbsp;   No direct Internet access.
+   No direct Internet access.
 
-&nbsp;   Used for application servers, internal services, or databases.
+   Used for application servers, internal services, or databases.
 
-&nbsp;   Internet traffic routes via NAT Gateway in the public subnet.
+   Internet traffic routes via NAT Gateway in the public subnet.
 
 Traffic Flow:
 
-&nbsp;  App Server → NAT GW → IGW → Internet (for outbound)
+  App Server → NAT GW → IGW → Internet (for outbound)
 
-&nbsp;  Bastion Host → App Server (for SSH or app access)
+  Bastion Host → App Server (for SSH or app access)
 
-&nbsp;  App Server ↔ DB (internal communication)
+  App Server ↔ DB (internal communication)
 
 Private Subnet Route Table Example:
 
@@ -73,7 +73,7 @@ Destination    Target
 0.0.0.0/0      nat-456def
 
 
-🌉 3. Internet Gateway (IGW)
+ ***🌉 3. Internet Gateway (IGW)
 
 IGW allows public internet traffic to flow in/out of the VPC.
 
@@ -86,15 +86,15 @@ Entry/exit point to/from the public internet.
 Required for public IP communication.
 
 
-🔁 4. NAT Gateway
+ ***🔁4. NAT Gateway***
 
-&nbsp; NAT Gateway lets private subnet instances access the internet\[outbound connections] for updates, package downloads, etc.
+ NAT Gateway lets private subnet instances access the internet\[outbound connections] for updates, package downloads, etc.
 
-&nbsp; It is deployed in a public subnet.
+ It is deployed in a public subnet.
 
-&nbsp; Private subnets route internet-bound traffic to this NAT.
+ Private subnets route internet-bound traffic to this NAT.
 
-&nbsp; It hides private IPs behind a public Elastic IP (EIP).
+ It hides private IPs behind a public Elastic IP (EIP).
 
 🔒 5. Security Groups (SG)
 
@@ -176,9 +176,9 @@ VPC: 10.0.0.0/16
 
 └── Private Subnet (10.0.2.0/24)
 
-&nbsp;    ├── Route via NAT for outbound
+    ├── Route via NAT for outbound
 
-&nbsp;    └── App servers / Databases
+    └── App servers / Databases
 
 ```
 
