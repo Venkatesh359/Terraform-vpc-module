@@ -2,7 +2,7 @@
 
 ```bash 
 
-  #🏗️ 1. VPC (Virtual Private Cloud)  
+ 🏗️ 1. VPC (Virtual Private Cloud)  
 
   -   A VPC is your isolated network environment in AWS. You define its CIDR range (for example, 10.0.0.0/16).
 
@@ -13,7 +13,7 @@
   This provides IPs from 10.0.0.0 to 10.0.255.255, which you then divide into subnets.
 
 
-  #🌐2. Subnets
+  🌐2. Subnets
 
   -Subnets divide your VPC CIDR block into smaller sections — public and private.
 
@@ -73,7 +73,7 @@ Destination    Target
 0.0.0.0/0      nat-456def
 
 
- ***🌉 3. Internet Gateway (IGW)
+ 🌉 3. Internet Gateway (IGW)
 
 IGW allows public internet traffic to flow in/out of the VPC.
 
@@ -86,7 +86,7 @@ Entry/exit point to/from the public internet.
 Required for public IP communication.
 
 
- ***🔁4. NAT Gateway***
+ 🔁4. NAT Gateway
 
  NAT Gateway lets private subnet instances access the internet\[outbound connections] for updates, package downloads, etc.
 
