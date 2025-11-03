@@ -1,188 +1,159 @@
-# Overview 
+# Terraform AWS VPC
 
-```bash 
+This module creates the following resources.
+# 🏗️ VPC Infrastructure Terraform Module
 
- 🏗️ 1. VPC (Virtual Private Cloud)  
+## Overview
+This Terraform module provisions a complete Virtual Private Cloud (VPC) network setup with public, private, and database subnets across two Availability Zones in **us-east-1**. It also configures internet access, NAT gateway routing, and VPC-to-default VPC peering.
 
-  -   A VPC is your isolated network environment in AWS. You define its CIDR range (for example, 10.0.0.0/16).
-
-  Example:
-
-  CIDR: 10.0.0.0/16
-
-  This provides IPs from 10.0.0.0 to 10.0.255.255, which you then divide into subnets.
-
-
-  🌐2. Subnets
-
-  -Subnets divide your VPC CIDR block into smaller sections — public and private.
-
-  Subnet Type	Example CIDR	Purpose	Route Table Entry
-
-  Public Subnet	10.0.1.0/24	Hosts resources needing internet access (EC2 bastion, ALB, etc.)	Route to Internet Gateway (IGW)
-
-  Private Subnet	10.0.2.0/24	Hosts backend resources (EC2, DBs)	Route to NAT Gateway
-
-   ***3.Public Subnet (10.0.1.0/24)***
-
-   A network directly connected to the Internet via an Internet Gateway (IGW).
-
-   Hosts:
-
-   Bastion Host → Used for SSH access to private servers.
-
-   NAT Gateway → Allows private resources to reach the internet outbound only (for patching, updates, etc.).
-
-   Traffic Flow:
-
-    Internet ↔ IGW ↔ Bastion Host (inbound SSH, web traffic, etc.)
-
-    Private subnet → NAT GW → IGW → Internet (for outbound only)
-
-Public Subnet Route Table Example:
-
-Destination    Target
-
-10.0.0.0/16    local
-
-0.0.0.0/0      igw-123abc
-
-
-- Private Subnet (10.0.2.0/24):
-
-   No direct Internet access.
-
-   Used for application servers, internal services, or databases.
-
-   Internet traffic routes via NAT Gateway in the public subnet.
-
-Traffic Flow:
-
-  App Server → NAT GW → IGW → Internet (for outbound)
-
-  Bastion Host → App Server (for SSH or app access)
-
-  App Server ↔ DB (internal communication)
-
-Private Subnet Route Table Example:
-
-Destination    Target
-
-10.0.0.0/16    local
-
-0.0.0.0/0      nat-456def
-
-
- 🌉 3. Internet Gateway (IGW)
-
-IGW allows public internet traffic to flow in/out of the VPC.
-
-It must be attached to your VPC.
-
-Only subnets with routes pointing to IGW are public.
-
-Entry/exit point to/from the public internet.
-
-Required for public IP communication.
-
-
- 🔁4. NAT Gateway
-
- NAT Gateway lets private subnet instances access the internet\[outbound connections] for updates, package downloads, etc.
-
- It is deployed in a public subnet.
-
- Private subnets route internet-bound traffic to this NAT.
-
- It hides private IPs behind a public Elastic IP (EIP).
-
-🔒 5. Security Groups (SG)
-
-Security Groups act as stateful firewalls at the instance level.
-
-✅ Typical Security Group Rules
-
-| SG Type              | Direction | Protocol | Port Range | Source/Destination     | Purpose                |
-
-| -------------------- | --------- | -------- | ---------- | ---------------------- | ---------------------- |
-
-| Public EC2 (Web/App) | Inbound   | TCP      | 22         | Your IP (`x.x.x.x/32`) | SSH access             |
-
-|                      | Inbound   | TCP      | 80, 443    | `0.0.0.0/0`            | Web access             |
-
-|                      | Outbound  | All      | All        | `0.0.0.0/0`            | Allow all outbound     |
-
-| Private EC2          | Inbound   | TCP      | 22         | Public SG              | SSH from bastion       |
-
-|                      | Inbound   | TCP      | 3306       | App SG                 | Database access        |
-
-|                      | Outbound  | All      | All        | `0.0.0.0/0`            | Allow outbound via NAT |
-
-💡 Stateful behavior: If inbound traffic is allowed, response traffic is automatically allowed.
-
-
-| SG Name                | Inbound                   | Outbound | Purpose                                  |
-
-| ---------------------- | ------------------------- | -------- | ---------------------------------------- |
-
-| \*\*Bastion-SG\*\*         | TCP 22 (SSH) from your IP | All      | Secure SSH entry point                   |
-
-| \*\*App-SG\*\*             | TCP 22 from Bastion-SG    | All      | App instances accessed only from Bastion |
-
-| \*\*DB-SG\*\* \*(optional)\* | TCP 3306 from App-SG      | All      | DB only accessible from App tier         |
-
-
-🔁 Traffic Direction (Color Coded)
-
-Red Arrows → Inbound communication (e.g., Bastion → App)
-
-Blue Arrows → Outbound communication (e.g., App → Internet via NAT)
-
-📦 6. Network Flow Summary
-
-| Direction        | Component                               | Description                           |
-
-| ---------------- | --------------------------------------- | ------------------------------------- |
-
-| Inbound Public   | IGW → Public Subnet → EC2 (via SG rule) | Allows internet traffic (e.g. HTTP)   |
-
-| Outbound Public  | EC2 → IGW                               | Internet access from public instances |
-
-| Outbound Private | EC2 → NAT GW → IGW                      | Private instance outbound internet    |
-
-| Inbound Private  | From Bastion / App Layer only           | Controlled via SG rules               |
-
-
-
-
-
-
-
-🧩 Example Architecture
-
-VPC: 10.0.0.0/16
-
-│
-
-├── Public Subnet (10.0.1.0/24)
-
-│    ├── IGW attached
-
-│    ├── NAT Gateway deployed here
-
-│    └── Bastion Host / ALB
-
-│
-
-└── Private Subnet (10.0.2.0/24)
-
-    ├── Route via NAT for outbound
-
-    └── App servers / Databases
-
-```
-
-
-
-
+---
+
+## 🚀 Resources Created
+
+### **VPC**
+- Creates an isolated **Virtual Private Cloud (VPC)** as the main networking boundary.
+- DNS hostnames are enabled for instances to get public DNS names.
+- Tagged dynamically with environment, project name, and common tags.
+
+---
+
+### **Internet Gateway (IGW)**
+- Attaches to the VPC to allow inbound/outbound traffic between the VPC and the Internet.
+- Required for public subnets to have internet access.
+
+---
+
+### **Subnets**
+| Type | Purpose | Availability Zones | Description |
+|------|----------|--------------------|--------------|
+| Public | Internet-facing layer | `us-east-1a`, `us-east-1b` | Hosts public resources like load balancers or bastion hosts. |
+| Private | Application layer | `us-east-1a`, `us-east-1b` | Hosts internal EC2 instances not accessible from the Internet. |
+| Database | Data layer | `us-east-1a`, `us-east-1b` | Hosts databases (e.g., RDS) that are isolated from direct public access. |
+
+Each subnet:
+- Uses CIDR blocks passed through variables (`public_subnet_cidrs`, `private_subnet_cidrs`, `database_subnet_cidrs`).
+- Is distributed across AZs for **high availability**.
+- Is automatically tagged with environment and zone information.
+
+---
+
+### **Route Tables**
+| Route Table | Purpose | Default Route |
+|--------------|----------|----------------|
+| Public | Handles routing for public subnets | `0.0.0.0/0 → IGW` |
+| Private | Handles routing for private subnets | `0.0.0.0/0 → NAT Gateway` |
+| Database | Handles routing for database subnets | `0.0.0.0/0 → NAT Gateway` (for patching/updates only) |
+
+Each route table is tagged and associated with the corresponding subnets.
+
+---
+
+### **Elastic IP (EIP)**
+- Allocates a **static public IP** for the NAT Gateway.
+- Ensures consistent outbound IP address for private/database resources.
+
+---
+
+### **NAT Gateway**
+- Deployed in the **public subnet (us-east-1a)**.
+- Enables instances in **private** and **database** subnets to **access the internet** (e.g., for OS updates) **without being reachable from the internet**.
+- Depends on the Internet Gateway creation.
+
+---
+
+### **Routing Setup**
+- **Public Route Table**: Directs `0.0.0.0/0` to the **Internet Gateway**.
+- **Private Route Table**: Directs `0.0.0.0/0` to the **NAT Gateway**.
+- **Database Route Table**: Also routes `0.0.0.0/0` via the **NAT Gateway**.
+- **Route Table Associations**: Each subnet is linked to the correct route table automatically.
+
+---
+
+### **VPC Peering (Optional Extension)**
+- The module supports adding **VPC peering** between this custom VPC and the **default VPC**.
+- Routes are added on both sides to enable private communication between the two VPCs.
+
+---
+
+## 🌐 **Network Flow Summary**
+
+| Subnet Type | Internet Access | Route Through | Publicly Accessible |
+|--------------|----------------|----------------|---------------------|
+| Public | Yes (Inbound + Outbound) | Internet Gateway | ✅ Yes |
+| Private | Outbound Only | NAT Gateway | ❌ No |
+| Database | Outbound Only (for patching) | NAT Gateway | ❌ No |
+
+---
+
+## 🧭 **High-Level Architecture**
+
+               +-------------------------+
+               |       Internet          |
+               +-----------+-------------+
+                           |
+                       [ IGW ]
+                           |
+      +-----------------------------------------+
+      |                 VPC                    |
+      |  CIDR: 10.0.0.0/16                     |
+      |                                         |
+      |  +-------------+       +-------------+  |
+      |  | Public Sub  |       | Public Sub  |  |
+      |  | us-east-1a  |       | us-east-1b  |  |
+      |  | EC2, LB, etc|       | EC2, LB, etc|  |
+      |  +------▲------+       +------+-------+  |
+      |         | NAT GW (EIP)        |          |
+      |         +---------------------+          |
+      |                                         |
+      |  +-------------+       +-------------+  |
+      |  | Private Sub |       | Private Sub |  |
+      |  | us-east-1a  |       | us-east-1b  |  |
+      |  | App Servers |       | App Servers |  |
+      |  +-------------+       +-------------+  |
+      |                                         |
+      |  +-------------+       +-------------+  |
+      |  | DB Subnet   |       | DB Subnet   |  |
+      |  | us-east-1a  |       | us-east-1b  |  |
+      |  | RDS, DB     |       | RDS, DB     |  |
+      |  +-------------+       +-------------+  |
+      |                                         |
+      +-----------------------------------------+
+                           |
+                     [ VPC Peering ]
+                           |
+                  +--------------------+
+                  |   Default VPC      |
+                  +--------------------+
+
+
+### Inputs
+
+
+---
+
+## ⚙️ **Inputs**
+
+| Variable | Description | Example |
+|-----------|--------------|----------|
+| `vpc_cidr` | CIDR block for the VPC | `"10.0.0.0/16"` |
+| `public_subnet_cidrs` | List of CIDRs for public subnets | `["10.0.1.0/24", "10.0.2.0/24"]` |
+| `private_subnet_cidrs` | List of CIDRs for private subnets | `["10.0.3.0/24", "10.0.4.0/24"]` |
+| `database_subnet_cidrs` | List of CIDRs for DB subnets | `["10.0.5.0/24", "10.0.6.0/24"]` |
+| `az_names` | List of Availability Zones | `["us-east-1a", "us-east-1b"]` |
+| `vpc_tags`, `igw_tags`, `subnet_tags`, etc. | Custom tags for each resource type | `{ Environment = "dev" }` |
+
+---
+
+## 🧩 **Outputs**
+
+| Output | Description |
+|---------|--------------|
+| `vpc_id` | The ID of the created VPC |
+| `public_subnet_ids` | List of public subnet IDs |
+| `private_subnet_ids` | List of private subnet IDs |
+| `database_subnet_ids` | List of database subnet IDs |
+| `nat_gateway_id` | ID of the created NAT Gateway |
+| `internet_gateway_id` | ID of the Internet Gateway |
+
+---
 
