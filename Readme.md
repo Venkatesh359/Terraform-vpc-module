@@ -1,3 +1,221 @@
+# AWS EC2 Security Groups & VPC Creation – Practical Guide
+
+This README explains **which ports should be opened** for **EC2 Security Groups (Inbound & Outbound)** and how to **create a VPC correctly**, with **clear real‑world examples**.
+
+---
+
+## 1. What is a Security Group?
+A **Security Group (SG)** is a **stateful virtual firewall** attached to AWS resources like EC2.
+
+Key points:
+- Works at **instance level**
+- **Stateful** (return traffic is automatically allowed)
+- Rules are **ALLOW only** (no DENY rules)
+
+---
+
+## 2. Inbound vs Outbound Rules (Simple)
+
+| Direction | Meaning |
+|---------|--------|
+| Inbound | Traffic **coming INTO** the EC2 instance |
+| Outbound | Traffic **going OUT FROM** the EC2 instance |
+
+---
+
+## 3. Recommended Inbound Ports for EC2 (Common Scenarios)
+
+### 🔐 SSH Access (Linux EC2)
+```
+Type     : SSH
+Protocol : TCP
+Port     : 22
+Source   : <YOUR_PUBLIC_IP>/32
+```
+
+⚠️ Avoid `0.0.0.0/0` in production.
+
+---
+
+### 🌐 Web Server (HTTP / HTTPS)
+```
+HTTP  | TCP | 80  | 0.0.0.0/0
+HTTPS | TCP | 443 | 0.0.0.0/0
+```
+
+Used for:
+- Nginx
+- Apache
+- Load-balanced applications
+
+---
+
+### 🗄️ Database Access (Example: MySQL)
+```
+MySQL | TCP | 3306 | Source: sg-<APP-SERVER-SG>
+```
+
+✔ Allows DB access **only from app servers**
+❌ Never expose databases to the internet
+
+---
+
+## 4. Outbound Rules (Important but Simple)
+
+### ✅ Default (Recommended)
+```
+All traffic | All | 0.0.0.0/0
+```
+
+Why?
+- OS updates
+- Package downloads
+- External APIs
+- Docker image pulls
+
+⚠️ Since SGs are **stateful**, return traffic is automatically allowed.
+
+---
+
+## 5. Example: Secure EC2 Security Group (Production)
+
+### Inbound Rules
+```
+SSH     22     <ADMIN_IP>/32
+HTTP    80     0.0.0.0/0
+HTTPS   443    0.0.0.0/0
+```
+
+### Outbound Rules
+```
+All traffic   All   0.0.0.0/0
+```
+
+---
+
+## 6. Security Group Source Types (CRITICAL CONCEPT)
+
+| Source Value | Meaning |
+|-------------|--------|
+| `0.0.0.0/0` | Anyone on the internet |
+| `<IP>/32` | Single trusted machine |
+| `sg-xxxx` | Traffic from another AWS resource |
+
+### Example:
+```
+Allow 3306 from sg-app-servers
+```
+Means:
+> Only EC2s with **sg-app-servers** can access DB
+
+---
+
+## 7. What is a VPC?
+A **VPC (Virtual Private Cloud)** is your **isolated network** in AWS.
+
+It contains:
+- Subnets
+- Route Tables
+- Internet Gateway
+- NAT Gateway
+- Security Groups
+- NACLs
+---
+
+Pic:
+
+![image!](Images/Vpc.png)
+
+---
+
+## 8. Standard VPC Creation (Public EC2 Setup)
+
+### Step 1: Create VPC
+```
+CIDR: 10.0.0.0/16
+```
+
+---
+
+### Step 2: Create Public Subnet
+```
+Subnet CIDR: 10.0.1.0/24
+```
+Enable:
+```
+Auto-assign Public IPv4: YES
+```
+
+---
+
+### Step 3: Create Internet Gateway (IGW)
+- Create IGW
+- Attach to VPC
+
+---
+
+### Step 4: Route Table (Public)
+Add route:
+```
+0.0.0.0/0  →  Internet Gateway
+```
+
+Associate this route table with **public subnet**.
+
+---
+
+## 9. Minimal Network ACL (Recommended)
+
+### Inbound
+```
+ALLOW ALL | 0.0.0.0/0
+```
+
+### Outbound
+```
+ALLOW ALL | 0.0.0.0/0
+```
+
+✔ Keep NACL simple
+✔ Control access using **Security Groups**
+
+---
+
+Pic:
+
+![image!](Images/Ip.png)
+
+## 10. Common Mistakes (VERY IMPORTANT)
+
+❌ Allowing SSH from **Security Group instead of IP**
+❌ No public IP on EC2
+❌ Subnet without IGW route
+❌ Blocking ephemeral ports in NACL
+❌ Opening DB ports to internet
+
+---
+
+## 11. Golden Rules (Remember This)
+
+1️⃣ Route Table + IGW ≠ Internet access
+2️⃣ Public IP + Correct SG = Access
+3️⃣ SG is **stateful**, NACL is **stateless**
+4️⃣ Ports don’t matter if **SOURCE is wrong**
+
+---
+
+## 12. Quick Interview Answer
+> "I ensure EC2 SSH is restricted to my IP, web ports are public, databases accept traffic only from application security groups, outbound is open, and networking is handled via public subnets with IGW."
+
+---
+
+## 13. Summary
+✔ Secure
+✔ Scalable
+✔ Interview‑ready
+✔ Production‑ready
+
+
 # Terraform AWS VPC
 
 This module creates the following resources.
