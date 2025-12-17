@@ -78,7 +78,7 @@ nat_gateway_tags = {
 # -------------------------
 # Peering
 # -------------------------
-is_peering_required = true
+is_peering_required = false
 
 
 
