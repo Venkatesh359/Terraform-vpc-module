@@ -57,11 +57,11 @@ resource "aws_route" "public_peering" { # This creates a route in our VPC’s pu
 ############################################
 
 resource "aws_route" "private_peering" {
+  count                     = var.is_peering_required ? 1 : 0
   route_table_id            = aws_route_table.private.id
   destination_cidr_block    = data.aws_vpc.default.cidr_block
-  vpc_peering_connection_id = aws_vpc_peering_connection.default[0].id
+  vpc_peering_connection_id = aws_vpc_peering_connection.default[count.index].id
 }
-
 
 
 ############################################
