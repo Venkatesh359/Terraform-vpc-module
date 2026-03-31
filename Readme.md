@@ -287,9 +287,15 @@ Each route table is tagged and associated with the corresponding subnets.
 
 ---
 
-### **VPC Peering (Optional Extension)**
-- The module supports adding **VPC peering** between this custom VPC and the **default VPC**.
-- Routes are added on both sides to enable private communication between the two VPCs.
+### **VPC Peering (Optional )**
+
+    - The module supports adding **VPC peering** between this custom VPC and the **default VPC**.
+
+    - Routes are added on both sides to enable private communication between the two VPCs.
+
+Pic:
+
+![image!](Images/peering.png)
 
 ---
 
