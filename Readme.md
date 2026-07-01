@@ -187,41 +187,46 @@ Pic:
 
 ## 10. Common Mistakes (VERY IMPORTANT)
 
+``` text
 ❌ Allowing SSH from **Security Group instead of IP**
-❌ No public IP on EC2
-❌ Subnet without IGW route
-❌ Blocking ephemeral ports in NACL
-❌ Opening DB ports to internet
 
+❌ No public IP on EC2
+
+❌ Subnet without IGW route
+
+❌ Blocking ephemeral ports in NACL
+
+❌ Opening DB ports to internet
+```
 ---
 
 ## 11. Golden Rules (Remember This)
-
+``` text 
 1️⃣ Route Table + IGW ≠ Internet access
+
 2️⃣ Public IP + Correct SG = Access
+
 3️⃣ SG is **stateful**, NACL is **stateless**
+
 4️⃣ Ports don’t matter if **SOURCE is wrong**
 
+```
 ---
 
 ## 12. Quick Interview Answer
+
 > "I ensure EC2 SSH is restricted to my IP, web ports are public, databases accept traffic only from application security groups, outbound is open, and networking is handled via public subnets with IGW."
 
 ---
 
-## 13. Summary
-✔ Secure
-✔ Scalable
-✔ Interview‑ready
-✔ Production‑ready
 
-
-# Terraform AWS VPC
+##  Terraform AWS VPC
 
 This module creates the following resources.
 # 🏗️ VPC Infrastructure Terraform Module
 
 ## Overview
+
 This Terraform module provisions a complete Virtual Private Cloud (VPC) network setup with public, private, and database subnets across two Availability Zones in **us-east-1**. It also configures internet access, NAT gateway routing, and VPC-to-default VPC peering.
 
 ---
